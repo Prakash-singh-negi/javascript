@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Closure Example</title>
+</head>
+<body>
+    
+</body>
+<script>
+    function func(){
+        var count = 0;
+        return {
+            increment:function incr() {
+                console.log("count increased by one");
+                count++;
+                console.log(count);
+            },
+            reset:function res(){
+                console.log("count reset to 0");
+                count = 0;
+                console.log(count);
+            }
+        }
+    }
+
+    let fn = func();
+    fn.increment();//1
+    fn.increment();//2 
+    fn.increment();//3
+    fn.reset();//0
+    fn.increment();//1
+</script>
+</html>

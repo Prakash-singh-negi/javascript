@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+<script>
+    Array.prototype.myFilter = function(callbackfunc, thisArg){
+        const result = [];
+        for(let i = 0;i<this.length;i++){
+            if(i in this){
+                if(callbackfunc.call(thisArg,this[i],this,i)){
+                    result.push(this[i]);
+                }
+            }
+        }
+        return result;
+    }
+    const arr = [1,2,3,4,5];
+    let even = arr.myFilter(x=>x%2 === 0);
+    console.log(even)
+</script>
+</html>

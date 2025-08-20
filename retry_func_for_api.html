@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+</body>
+<script>
+    function retry(fn,retries=3,delay=1000){
+        return new Promise((resolve, reject)=>{
+            fn()
+            .then(resolve)
+            .catch(err => {
+                if(retries === 0){
+                    reject(err);
+                }else{
+                    setTimeout(()=>{
+                        retry(fn,retries-1,delay).then(resolve).catch(reject);
+                    },delay);
+                }
+            });
+        });
+    }
+
+    let attempt = 0;
+    function mockApi(){
+        return new Promise((resolve,reject)=>{
+            attempt++;
+            console.log("attempt",attempt);
+
+            if(attempt<3) reject("failed");
+            else resolve("Success on attempt"+ attempt);
+        });
+    }
+
+
+    retry(mockApi,5,1000)
+    .then(res => console.log("Result",res))
+    .catch(err => console.error("error:" ,err));
+</script>
+</html>
