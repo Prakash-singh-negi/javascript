@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+<script>
+    function renderList(container, items){
+        const existing = new Map();
+
+        container.childNodes.forEach(node =>{
+            if(node.nodeType === Node.ELEMENT_NODE && node.dataset.key) {
+                existing.set(node.dataset.key, node);
+            }
+        });
+
+        const frag = document.createDocumentFragment();
+
+        for(let item of lines){
+            let node = existing.get(String(item.id));
+
+            if(node){
+                node.textContent = item.text;
+                existing.delete(String(item.id));
+            }else{
+                node = document.createElement("div");
+                node.dataset.key = item.id;
+                node.textContent = item.text;
+            }
+            frag.appendChild(node);
+        }
+        for(let [,leftover] of existing){
+            leftover.remove();
+        }
+
+        container.innerH
+    }
+    
+</script>
+</html>
