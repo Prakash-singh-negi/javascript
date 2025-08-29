@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+<script>
+    function findalldeep(root, selector){
+        const result = [];
+        const walker = document.createTreeWalker(root,
+        NodeFilter.SHOW_ELEMENT,
+        {
+            acceptNode: node=> node.matches(selector) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP
+        }
+        );
+
+        while(walker.nextNode()){
+            result.push(walker.currentNode);
+        }
+
+        return result;
+    }
+</script>
+</html>

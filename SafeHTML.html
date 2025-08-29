@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+<script>
+    function safeHTML(template,data){
+        const tpl = document.createElement("template");
+        tpl.innerHTML = template;
+
+        const root = tpl.content.cloneNode(true);
+
+        const walker = document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+        while(walker.nextNode()){
+            let txt = walker.currentNode.nodeValue;
+            txt = txt.replace(/\{\{\w+)\}\}/g, (_,key)=>{
+                return (key in data) ? data[key] : "";
+            });
+            walker.currentNode.nodeValue = txt;
+        }
+        return root;
+    }
+</script>
+</html>
