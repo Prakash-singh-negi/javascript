@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="toolbar"></div>
+</body>
+<script>
+    const toolbar = document.getElementById('toolbar');
+
+        function on(parent, eventType, selector, handler) {
+      parent.addEventListener(eventType, function (event) {
+        if (event.target.matches(selector)) {
+          handler.call(event.target, event); // "this" = clicked button
+        }
+      });
+    }
+
+    function addButton(action, label, id){
+        const btn = document.createElement('button');
+        btn.textContent = label;
+        btn.dataset.action = action;
+        btn.dataset.id = id;
+        toolbar.appendChild(btn);
+    }
+
+on(toolbar, 'click', 'button[data-action]', function (e) {
+  const { action, id } = this.dataset;
+
+  switch (action) {
+    case 'edit':   console.log(`Edit item ${id}`); break;
+    case 'delete': console.log(`Delete item ${id}`); break;
+    case 'share':  console.log(`Share item ${id}`); break;
+  }
+});
+    
+    addButton('edit', 'Edit', '101');
+    addButton('delete', 'Delete','101');
+    addButton('share', 'Share', '101');
+</script>
+</html>
