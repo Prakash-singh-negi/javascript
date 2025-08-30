@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .selected{
+            background-color: lightblue;
+        }
+    </style>
+</head>
+<body>
+    <table id="userTable" border="1">
+        <tbody>
+            <tr data-id="1">
+                <td>Alice</td>
+            </tr>
+            <tr data-id="2">
+                <td>Bob</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+<script>
+    const table = document.getElementById('userTable');
+
+    function on(root,eventType,selector,handler){
+        root.addEventListener(eventType, function(event){
+            const el = event.target.closest(selector);
+            if(el && root.contains(el)){
+                handler.call(el, event);
+            }
+        })
+    }
+
+    on(table, 'click', 'tr', function(e){
+        table.querySelectorAll('tr.selected').forEach(tr => tr.classList.remove('selected'));
+
+        this.classList.add('selected');
+        console.log('selected row id:',this.dataset.id);
+    });
+
+    function addRow(id, name){
+        const tr = document.createElement('tr');
+        tr.dataset.id = id;
+        tr.innerHTML = `<td>${name}</td>`;
+        table.querySelector('tbody').appendChild(tr);
+    }
+
+    addRow(3, 'Charlie');
+    addRow(4, 'Diana');
+</script>
+</html>
