@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Document</title>
+  </head>
+  <body></body>
+  <script>
+    function debounce(fn,delay,{leading = false, trailing = true, maxwidth}={}){
+        let timer = null;
+        let lastInvokeTime = 0;
+        let lastCallTime;
+        let lastArgs, lastThis;
+
+        function invoke(time){
+            lastInvokeTime = time;
+            fn.apply(lastThis, lastArgs);
+            lastArgs = lastThis = null;
+        }
+
+        function startTimer(pendingfn, wait){
+            return setTimeout(pendingFn, wait);
+        }
+    }
+  </script>
+</html>
