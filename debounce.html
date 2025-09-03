@@ -20,6 +20,67 @@
         function startTimer(pendingfn, wait){
             return setTimeout(pendingFn, wait);
         }
+
+        function trailingEdge(time){
+            timer = null;
+             if(trailing && lastArgs){
+                invoke(time);
+             }
+        }
+        function debounced(...args){
+            const now = Date.now();
+            const isInvoking = shouldInvoke(now);
+
+            lastArgs = args;
+            lastThis = this;
+            lastCallTime = now;
+
+            if(isInvoking){
+                if(!Timer && leading){
+                    invoke(now);
+                }
+                if(timer){
+                    clearTimeout(timer);
+                    timer = null;
+                }
+                timer = startTimer(timerExpired,delay);
+            }else if(!timer){
+                timer = startTimer(timerExpired, delay);
+            }
+        }
+        function shouldInvoke(time){
+            const sinceLastCall = time - lastCallTime;
+            const sinceLastInvoke = time - lastInvokeTime;
+
+            return(
+                lastCallTime === undefined||
+                sinceLastCall >= delay ||
+                sinceLastCall < 0 ||
+                (maxWait !== undefined && sinceLastInvoke >= maxWait)
+            );
+        }
+
+        function timerExpired(){
+            const now = Date.now();
+            if(shouldInvoke(now)) {
+                trailingEdge(now);
+            }else{
+                timer = startTimer(timerExpired, delay - (now - lastCallTime));
+            }
+        }
+
+        debounced.cancel = function(){
+            if(timer) clearTimeout(timer);
+            timer = lastArgs = lastThis = lastCallTime = null;
+        };
+
+        debounced.flush = function(){
+            if(timer) {
+                clearTimeout(timer);
+                trailingEdge(Date.now());
+            }
+        };
+        return debounced;
     }
   </script>
 </html>

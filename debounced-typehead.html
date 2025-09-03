@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 40px;
+            background: #f9f9f9;
+        }
+
+        h3 {
+            margin-bottom: 10px;
+        }
+
+        #search {
+            width: 300px;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        #search:focus {
+            border-color: #007bff;
+        }
+
+        #loader {
+            display: none;
+            margin-top: 10px;
+            font-style: italic;
+            color: #555;
+        }
+
+        #results li {
+            padding: 8px 10px;
+            margin-bottom: 5px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        #results li:hover {
+            background: #f1f1f1;
+        }
+
+        #empty {
+            margin-top: 15px;
+            color: #999;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <h3>🔍Debounced Typehead search</h3>
+    <input id="search" placeholder="Type of search..." />
+    <div id="loader">⏳ Searching...</div>
+    <ul id="results"></ul>
+    <div id="empty"></div>
+</body>
+<script>
+    function debounce(fn, delay) {
+        let timer, controller;
+
+        return function (...args) {
+            if (controller) controller.abort();
+            controller = new AbortController();
+
+            clearTimeout(timer);
+
+            timer = setTimeout(() => {
+                fn.apply(this, [...args, controller.signal]);
+            }, delay);
+        };
+    }
+
+    // for Async search*************
+    async function search(query, signal) {
+        const resultE1 = document.getElementById("results");
+        const loaderE1 = document.getElementById("loader");
+        const emptyE1 = document.getElementById("empty");
+
+        resultE1.innerHTML = "";
+        emptyE1.textContent = "";
+
+        if (!query.trim()) {
+            loaderE1.style.display = "none";
+            return;
+        }
+
+        loaderE1.style.display = "block";
+
+        try {
+            const res = await fetch(
+                `https://en.wikipedia.org/w/api.php?action=query&list=search&format=json&origin=*&srsearch=${encodeURIComponent(
+                    query
+                )}`,
+                { signal }
+            );
+            const data = await res.json();
+            loaderE1.style.display = "none";
+
+            const results = data.query.search;
+            if (results.length === 0) {
+                emptyE1.textContent = "No results found.";
+                return;
+            }
+
+            resultE1.innerHTML = results
+                .slice(0, 5)
+                .map(
+                    (item) => `              <li>
+                <a href="https://en.wikipedia.org/wiki/${encodeURIComponent(
+                        item.title
+                    )}" target="_blank">
+                  ${item.title}
+                </a>
+                <p>${item.snippet}...</p>
+              </li>`
+                )
+                .join("");
+        } catch (err) {
+            loaderE1.style.display = "none";
+            if (err.name === "AbortError") {
+                console.log("Aborted request for:", query);
+            } else {
+                emptyE1.textContent = "Error fetching results.";
+                console.error("Search error:", err);
+            }
+        }
+    }
+
+    const debouncedSearch = debounce(search, 250);
+
+    document.getElementById("search").addEventListener("input", (e) => {
+        debouncedSearch(e.target.value);
+    });
+</script>
+
+</html>
