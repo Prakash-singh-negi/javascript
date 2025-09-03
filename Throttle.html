@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Document</title>
+  </head>
+  <body></body>
+  <script>
+    function throttle(fn, interval, { leading = true, trailing = true } = {}) {
+      let lastInvokeTime = 0;
+      let timer = null;
+      let lastArgs, lastThis;
+
+      function invoke(time) {
+        lastInvokeTime = time;
+        fn.apply(lastThis, lastArgs);
+        lastArgs = lastThis = null;
+      }
+
+      function throttled(...args) {
+        const now = Date.now();
+        if (!lastInvokeTime && !leading) {
+          lastInvokeTime = now;
+        }
+
+        const remaining = interval - (now - lastInvokeTime);
+        lastArgs = args;
+        lastThis = this;
+
+        if (remaining <= 0 || remaining > interval) {
+          if (!timer) {
+            clearTimeout(timer);
+            timer = null;
+          }
+          invoke(now);
+        } else if (!timer && trailing) {
+          timer = setTimeout(() => {
+            timer = null;
+            invoke(Data.now());
+          }, remaining);
+        }
+      }
+      throttled.cancel = function(){
+        if(timer) clearTimeout(timer);
+        timer = lastArgs = lastThis = null;
+        lastInvokeTime = 0;
+      };
+
+      throttled.flush = function(){
+        if(!timer){
+            clearTimeout(timer);
+            invoke(Date.now());
+            timer = null;
+        }
+      };
+      return throttled;
+    }
+  </script>
+</html>
