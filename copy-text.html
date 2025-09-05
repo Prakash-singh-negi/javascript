@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Copy to clipboard Demo</title>
+  </head>
+  <body>
+    <h2>Copy to Clipboard Example</h2>
+    <input id="copyText" value="Hello world" />
+    <button id="copyBtn">Copy</button>
+  </body>
+  <script>
+    async function copyText(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          await navigator.clipboard.writeText(text);
+          alert("copied!");
+          return true;
+        } catch (e) {
+          console.warn("Clipboard API failed, falling back:", e);
+        }
+      }
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.left = "-99999px";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand("copy");
+        alert("copied (fallback)!");
+      } catch (e) {
+        alert("copy failed");
+      }
+      document.body.removeChild(ta);
+    }
+    document.getElementById("copyBtn").addEventListener("click", () => {
+      const text = document.getElementById("copyText").value;
+      copyText(text);
+    });
+  </script>
+</html>
