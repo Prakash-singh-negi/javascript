@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body></body>
+<script>
+
+    const SETTINGS_VERSION = 2;
+    const DEFAULT_SETTINGS = {
+        theme: "light",
+        lang: "en",
+        notifications: true,
+    };
+
+    function validateSettings(obj){
+        return (
+            obj &&
+            typeof obj.theme === "string" &&
+            typeof obj.lang === "string" &&
+            typeof obj.notifications === "boolean"
+        );
+    }
+
+    function migrateSettings(data, fromVersion){
+        let migrated = {...data};
+
+        if(fromVersion < 2){
+            migrated.notifications = true;
+        }
+
+        return migrated;
+    }
+
+    const storage = {
+        getItem(key){
+            try{
+                const raw = localStorage.getItem(key);
+                if(!raw) return DEFAULT_SETTINGS;
+
+                const parsed = JSON.parse(raw);
+
+                if(parsed.version !== SETTINGS_VERSION){
+                    const migrated = migrateSettings(parsed.data, parsed.version || 1);
+                    this.setItem(key,migrated);
+                    return migrated;
+                }
+
+                return validateSettings(parsed.data) ? parsed.data : DEFAULT_SETTINGS;
+            }catch {
+                return DEFAULT_SETTINGS;
+            }
+        },
+
+        setItem(key,value){
+            const payload = {
+                version: SETTINGS_VERSION,
+                data: value,
+            };
+            localStorage.setItem(key, JSON.stringify(payload));
+        }
+    };
+
+    storage.setItem("settings", {theme: "dark",lang:"hi",notifications:false});
+    console.log(storage.getItem("settings"));
+
+</script>
+</html>
