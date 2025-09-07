@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Accessible Modal (Vanilla JS)</title>
+    <style>
+      :root {
+        --bg: #f6fbff;
+        --card: #ffffff;
+        --muted: #556;
+        --accent: #2563eb;
+        --shadow: rgba(0, 0, 0, 0.12);
+        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, #e9f277 0, #f6fbff 100%);
+        padding: 24px;
+        color: #0b1220;
+      }
+      .ui {
+        width: 100%;
+        max-width: 720px;
+        text-align: left;
+      }
+      h1 {
+        margin: 0 0 8px 0;
+        font-size: 20px;
+      }
+      p.lead {
+        margin: 0 0 18px 0;
+        color: var(--muted);
+      }
+      .btn {
+        background: var(--accent);
+        color: #fff;
+        border: 0;
+        padding: 10px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .btn.ghost {
+        background: transparent;
+        border: 1px solid rgba(0, 0, 0, 0.6);
+        color: var(--muted);
+      }
+      .backdrop {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(5, 10, 20, 0.5);
+        z-index: 1000;
+        padding: 20px;
+      }
+      .backdrop.open {
+        display: flex;
+      }
+      .modal {
+        width: 100%;
+        max-width: 560px;
+        background: var(--card);
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow: 0 18px 40px var(--shadow);
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        transform: translate(8px);
+        transition: transform 0.18s ease, opacity 0.14s ease;
+      }
+      .modal.open {
+        transform: none;
+      }
+
+      .modal header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .modal h2 {
+        margin: 0;
+        font-size: 16px;
+      }
+      .muted {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      /* Form styles */
+      .field {
+        display: block;
+        margin-top: 12px;
+      }
+      input,
+      textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        background: #fff;
+        font-size: 14px;
+        color: inherit;
+        margin-top: 6px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        margin-top: 12px;
+      }
+      :focus {
+        outline: 3px solid rgba(37, 99, 235, 0.18);
+        outline-offset: 2px;
+        border-radius: 6px;
+      }
+      .note {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ui">
+      <h1>Modal demo</h1>
+      <p class="lead">
+        Click the button to open a focus-trapped modal (accessible, vanilla JS).
+      </p>
+
+      <button id="openBtn" class="btn">Open Modal</button>
+
+      <p class="note">
+        This modal demonstrate a focus trap, ESC-to-close, click outside to
+        close and simple validation
+      </p>
+    </div>
+
+    <!-- Backdrop and Modal -->
+    <div class="backdrop" id="backdrop" aria-hidden="true">
+      <div
+        class="modal"
+        id="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modalTitle"
+        aria-describedby="modalDesc"
+      >
+        <header>
+          <h2 id="modalTitle">Contact us</h2>
+          <button id="closeBtn" class="btn ghost" aria-label="Close dialog">
+            X
+          </button>
+        </header>
+
+        <p class="muted" id="modalDesc">
+          Quick message - fields are validated client-side.
+        </p>
+
+        <form id="theForm" novalidate>
+          <label class="field">
+            <div class="muted">Name</div>
+            <input
+              type="text"
+              name="name"
+              id="name"
+              required
+              placeholder="Your name"
+            />
+          </label>
+
+          <label class="field">
+            <div class="muted">Email</div>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              placeholder="you@example.com"
+            />
+          </label>
+
+          <label class="field">
+            <div class="muted">Message</div>
+            <textarea
+              name="message"
+              id="msg"
+              rows="4"
+              required
+              placeholder="Message..."
+            ></textarea>
+          </label>
+          <div class="actions">
+            <button type="button" id="cancelBtn" class="btn ghost">
+              Cancel
+            </button>
+            <button type="submit" class="btn">Send</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <script>
+      const openBtn = document.getElementById("openBtn");
+      const backdrop = document.getElementById("backdrop");
+      const modal = document.getElementById("modal");
+      const closeBtn = document.getElementById("closeBtn");
+      const cancelBtn = document.getElementById('cancelBtn');
+      const form = document.getElementById("theForm");
+
+      let lastFocused = null;
+      let removeTrap = null;
+
+      function getFocusable(el) {
+        return Array.from(
+          el.querySelectorAll(
+            'a[href], button:not([diabled]),textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          )
+        ).filter((e) => e.offsetParent !== null); // This means only those whose position is not fixed
+      }
+
+      function trapFocus(container) {
+        const focusables = getFocusable(container);
+        if (!focusables.length) return () => {};
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        function onkey(e) {
+          if (e.key !== "Tab") return;
+          if (e.shiftkey) {
+            if (document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            }
+          } else {
+            if (document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+        }
+        container.addEventListener('keydown', onkey);
+        return ()=> container.removeEventListener('keydown',onkey);
+      }
+
+      //Open modal
+      function openModal(){
+        lastFocused = document.activeElement;
+        backdrop.classList.add('open');
+        backdrop.removeAttribute('aria-hidden');
+        modal.classList.add('open');
+
+        removeTrap = trapFocus(modal);
+        const focusables = getFocusable(modal);
+        if(focusables.length) focusables[0].focus();
+
+        document.addEventListener('keydown', onkeydown);
+        backdrop.addEventListener('mousedown',onBackdropMouseDown);
+      }
+
+      //Close modal
+      function closeModal(){
+        backdrop.classList.remove('open');
+        backdrop.setAttribute('aria-hidden', ' true');
+        modal.classList.remove('open');
+
+        // remove trap and listeners
+        if(removeTrap) removeTrap();
+        document.removeEventListener('keydown', onkeydown);
+        backdrop.removeEventListener('mousedown', onBackdropMouseDown);
+
+        // restore focus
+        if(lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus(); 
+      }
+
+      // Handlers
+      function onkeydown(e){
+        if(e.key === 'Escape'){
+            e.preventDefault();
+            closeModal();
+        }
+      }
+
+      function onBackdropMouseDown(e){
+        //only close when click is outside modal
+        if(!modal.contains(e.target)) closeModal();
+      }
+
+      /* Event wiring */
+      openBtn.addEventListener('click',openModal);
+      closeBtn.addEventListener('click',closeModal);
+      cancelBtn.addEventListener('click',closeModal);
+
+      // Simple form validation demo (client-side only)
+      form.addEventListener('submit', (e)=>{
+        e.preventDefault();
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const msg = document.getElementById('msg').value.trim();
+
+        if(name.length < 2){ alert('Name must be at least 2 characters'); return;}
+        if(!/^\S+@\S+\.\S+$/.test(email)) { alert('Enter a valid email'); return;}
+        if(msg.length < 6) {alert('Message is too short'); return;}
+
+        //Simulate submit
+        alert('Message sent(demo).');
+        form.reset();
+        closeModal();
+      });
+    </script>
+  </body>
+</html>
